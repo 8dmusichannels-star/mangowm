@@ -74,7 +74,7 @@ jobs:
       - name: Build wayland-protocols
         if: steps.check.outputs.skip == 'false'
         run: |
-          git clone -b 1.39 https://gitlab.freedesktop.org/wayland/wayland-protocols.git
+          git clone -b 1.41 https://gitlab.freedesktop.org/wayland/wayland-protocols.git
           cd wayland-protocols
           meson build -Dprefix=/usr -Dtests=false
           sudo ninja -C build install
