@@ -168,22 +168,22 @@ jobs:
           mkdir -p $PKGDIR/usr/share
 
           # Her bileşeni DESTDIR ile PKGDIR'e kur
-          DESTDIR=$PKGDIR ninja -C $GITHUB_WORKSPACE/mango/build install
-          DESTDIR=$PKGDIR ninja -C $GITHUB_WORKSPACE/wlroots/build install
-          DESTDIR=$PKGDIR ninja -C $GITHUB_WORKSPACE/scenefx/build install
-          DESTDIR=$PKGDIR ninja -C $GITHUB_WORKSPACE/libinput/build install
-          DESTDIR=$PKGDIR ninja -C $GITHUB_WORKSPACE/libliftoff/build install
-          DESTDIR=$PKGDIR ninja -C $GITHUB_WORKSPACE/libdisplay-info/build install
-          DESTDIR=$PKGDIR ninja -C $GITHUB_WORKSPACE/pixman/build install
-          DESTDIR=$PKGDIR ninja -C $GITHUB_WORKSPACE/wayland/build install
+          sudo DESTDIR=$PKGDIR ninja -C $GITHUB_WORKSPACE/mango/build install
+          sudo DESTDIR=$PKGDIR ninja -C $GITHUB_WORKSPACE/wlroots/build install
+          sudo DESTDIR=$PKGDIR ninja -C $GITHUB_WORKSPACE/scenefx/build install
+          sudo DESTDIR=$PKGDIR ninja -C $GITHUB_WORKSPACE/libinput/build install
+          sudo DESTDIR=$PKGDIR ninja -C $GITHUB_WORKSPACE/libliftoff/build install
+          sudo DESTDIR=$PKGDIR ninja -C $GITHUB_WORKSPACE/libdisplay-info/build install
+          sudo DESTDIR=$PKGDIR ninja -C $GITHUB_WORKSPACE/pixman/build install
+          sudo DESTDIR=$PKGDIR ninja -C $GITHUB_WORKSPACE/wayland/build install
 
           # Gereksiz geliştirici dosyalarını temizle
-          rm -rf $PKGDIR/usr/include
-          rm -rf $PKGDIR/usr/lib/pkgconfig
-          rm -rf $PKGDIR/usr/share/pkgconfig
-          rm -rf $PKGDIR/usr/share/doc
-          rm -rf $PKGDIR/usr/share/man
-          rm -rf $PKGDIR/usr/share/wayland-protocols
+          sudo rm -rf $PKGDIR/usr/include
+          sudo rm -rf $PKGDIR/usr/lib/pkgconfig
+          sudo rm -rf $PKGDIR/usr/share/pkgconfig
+          sudo rm -rf $PKGDIR/usr/share/doc
+          sudo rm -rf $PKGDIR/usr/share/man
+          sudo rm -rf $PKGDIR/usr/share/wayland-protocols
 
           # control dosyası oluştur
           cat > $PKGDIR/DEBIAN/control << EOF
