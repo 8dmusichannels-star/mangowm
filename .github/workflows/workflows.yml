@@ -47,7 +47,7 @@ jobs:
             libgbm-dev libudev-dev libevdev-dev \
             libmtdev-dev libwacom-dev \
             libegl-dev libgles-dev \
-            hwdata checkinstall pkg-config \
+            hwdata pkg-config \
             libcjson-dev \
             libxcb1-dev \
             libxcb-composite0-dev \
@@ -61,7 +61,8 @@ jobs:
             libxcb-res0-dev \
             libx11-xcb-dev \
             libx11-dev \
-            xwayland
+            xwayland \
+            dpkg-dev
 
       - name: Build wayland
         if: steps.check.outputs.skip == 'false'
@@ -153,22 +154,59 @@ jobs:
           meson build -Dprefix=/usr
           sudo ninja -C build install
 
-      - name: Package .deb
+      - name: Package everything into one .deb
         if: steps.check.outputs.skip == 'false'
         run: |
           VERSION=${{ steps.mangowm_release.outputs.version }}
-          cd $GITHUB_WORKSPACE/mango
-          sudo checkinstall \
-            --pkgname=mangowm \
-            --pkgversion=${VERSION#v} \
-            --pkgrelease=devuan1 \
-            --pkglicense=MIT \
-            --maintainer="8dmusichannels-star" \
-            --nodoc \
-            --default \
-            ninja -C build install
-          find $GITHUB_WORKSPACE/mango -name "*.deb" \
-            -exec mv {} $GITHUB_WORKSPACE/mangowm-${VERSION}-devuan.deb \;
+          PKGVER=${VERSION#v}
+          PKGDIR=$GITHUB_WORKSPACE/mangowm-pkg
+
+          # Klasör yapısını oluştur
+          mkdir -p $PKGDIR/DEBIAN
+          mkdir -p $PKGDIR/usr/bin
+          mkdir -p $PKGDIR/usr/lib
+          mkdir -p $PKGDIR/usr/share
+
+          # Her bileşeni DESTDIR ile PKGDIR'e kur
+          DESTDIR=$PKGDIR ninja -C $GITHUB_WORKSPACE/mango/build install
+          DESTDIR=$PKGDIR ninja -C $GITHUB_WORKSPACE/wlroots/build install
+          DESTDIR=$PKGDIR ninja -C $GITHUB_WORKSPACE/scenefx/build install
+          DESTDIR=$PKGDIR ninja -C $GITHUB_WORKSPACE/libinput/build install
+          DESTDIR=$PKGDIR ninja -C $GITHUB_WORKSPACE/libliftoff/build install
+          DESTDIR=$PKGDIR ninja -C $GITHUB_WORKSPACE/libdisplay-info/build install
+          DESTDIR=$PKGDIR ninja -C $GITHUB_WORKSPACE/pixman/build install
+          DESTDIR=$PKGDIR ninja -C $GITHUB_WORKSPACE/wayland/build install
+
+          # Gereksiz geliştirici dosyalarını temizle
+          rm -rf $PKGDIR/usr/include
+          rm -rf $PKGDIR/usr/lib/pkgconfig
+          rm -rf $PKGDIR/usr/share/pkgconfig
+          rm -rf $PKGDIR/usr/share/doc
+          rm -rf $PKGDIR/usr/share/man
+          rm -rf $PKGDIR/usr/share/wayland-protocols
+
+          # control dosyası oluştur
+          cat > $PKGDIR/DEBIAN/control << EOF
+          Package: mangowm-full
+          Version: ${PKGVER}-devuan1
+          Section: x11
+          Priority: optional
+          Architecture: amd64
+          Maintainer: 8dmusichannels-star
+          Description: MangoWM Wayland compositor with all dependencies
+           Includes mangowm, wlroots, scenefx, libinput, libliftoff,
+           libdisplay-info, pixman and wayland libraries.
+          EOF
+
+          # ldconfig postinst scripti
+          cat > $PKGDIR/DEBIAN/postinst << 'EOF'
+          #!/bin/sh
+          ldconfig
+          EOF
+          chmod 755 $PKGDIR/DEBIAN/postinst
+
+          # .deb oluştur
+          dpkg-deb --build $PKGDIR $GITHUB_WORKSPACE/mangowm-full-${VERSION}-devuan.deb
 
       - name: Publish Release
         if: steps.check.outputs.skip == 'false'
@@ -179,12 +217,12 @@ jobs:
           body: |
             Automatic build — MangoWM ${{ steps.mangowm_release.outputs.version }} for Devuan.
 
+            Tüm bağımlılıklar (wlroots, scenefx, libinput, vb.) tek pakette.
+
             **Install:**
             ```bash
-            sudo dpkg -i mangowm-${{ steps.mangowm_release.outputs.version }}-devuan.deb
+            wget https://github.com/${{ github.repository }}/releases/download/${{ steps.mangowm_release.outputs.version }}/mangowm-full-${{ steps.mangowm_release.outputs.version }}-devuan.deb
+            sudo dpkg -i mangowm-full-${{ steps.mangowm_release.outputs.version }}-devuan.deb
             ```
-
-            **Not:** Bu paket Ubuntu üzerinde derlenmiş olup Devuan için tasarlanmıştır.
           files: |
-            ${{ github.workspace }}/mangowm-${{ steps.mangowm_release.outputs.version }}-devuan.deb
-            ${{ github.workspace }}/mangowm.tar.gz
+            ${{ github.workspace }}/mangowm-full-${{ steps.mangowm_release.outputs.version }}-devuan.deb
