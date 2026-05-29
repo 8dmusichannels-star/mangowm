@@ -215,13 +215,14 @@ jobs:
           tag_name: ${{ steps.mangowm_release.outputs.version }}
           name: MangoWM ${{ steps.mangowm_release.outputs.version }} for Devuan
           body: |
-            Automatic build — MangoWM ${{ steps.mangowm_release.outputs.version }} for Devuan.
+            Automatic build — MangoWM ${{ steps.mangowm_release.outputs.version }} for Deb.
 
-            Tüm bağımlılıklar (wlroots, scenefx, libinput, vb.) tek pakette.
+            All depends (wlroots, scenefx, libinput, vb.) one package.
 
             **Install:**
             ```bash
             wget https://github.com/${{ github.repository }}/releases/download/${{ steps.mangowm_release.outputs.version }}/mangowm-full-${{ steps.mangowm_release.outputs.version }}-devuan.deb
+            sudo apt remove libwayland-bin libwayland-client0 libwayland-server0 libwayland-cursor0 libpixman-1-0
             sudo dpkg -i mangowm-full-${{ steps.mangowm_release.outputs.version }}-devuan.deb
             ```
           files: |
