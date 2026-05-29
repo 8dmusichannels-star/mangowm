@@ -72,7 +72,7 @@ jobs:
         run: |
           git clone -b 1.27.1 https://gitlab.freedesktop.org/libinput/libinput.git
           cd libinput
-          meson build -Dprefix=/usr -Ddocumentation=false -Dtests=false -Dlibwacom=false
+          meson build -Dprefix=/usr -Ddocumentation=false -Dtests=false -Dlibwacom=false -Ddebug-gui=false
           sudo ninja -C build install
           sudo ldconfig
 
