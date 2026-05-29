@@ -48,7 +48,12 @@ jobs:
             libegl-dev libgles-dev \
             hwdata checkinstall pkg-config \
             wayland-protocols \
-            libcjson-dev
+            libcjson-dev \
+            libxcb1-dev 
+            libxcb-ewmh-dev \ 
+            libxcb-render-util0-dev \
+            libxcb-xinput-dev \
+            libx11-dev 
 
       - name: Build wayland
         if: steps.check.outputs.skip == 'false'
