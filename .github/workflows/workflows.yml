@@ -41,7 +41,6 @@ jobs:
             libffi-dev libexpat1-dev libxml2-dev \
             libdrm-dev libxkbcommon-dev \
             libseat-dev libpcre2-dev \
-            libxcb-composite0-dev libxcb-icccm4-dev xwayland \
             libgbm-dev libudev-dev libevdev-dev \
             libmtdev-dev libwacom-dev \
             libegl-dev libgles-dev \
@@ -49,10 +48,18 @@ jobs:
             wayland-protocols \
             libcjson-dev \
             libxcb1-dev \
-            libxcb-ewmh-dev \
-            libxcb-render-util0-dev \
+            libxcb-composite0-dev \
+            libxcb-xfixes0-dev \
             libxcb-xinput-dev \
-            libx11-dev
+            libxcb-icccm4-dev \
+            libxcb-image0-dev \
+            libxcb-render0-dev \
+            libxcb-render-util0-dev \
+            libxcb-ewmh-dev \
+            libxcb-res0-dev \
+            libx11-xcb-dev \
+            libx11-dev \
+            xwayland
             
       - name: Build wayland
         if: steps.check.outputs.skip == 'false'
