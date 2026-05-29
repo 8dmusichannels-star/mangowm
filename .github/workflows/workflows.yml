@@ -42,7 +42,7 @@ jobs:
             libffi-dev libexpat1-dev libxml2-dev \
             libdrm-dev libxkbcommon-dev \
             libseat-dev libpcre2-dev \
-            libxcb-composite0-dev xwayland \
+            libxcb-composite0-dev libxcb-icccm4-dev xwayland \
             libgbm-dev libudev-dev libevdev-dev \
             libmtdev-dev libwacom-dev \
             libegl-dev libgles-dev \
