@@ -47,7 +47,8 @@ jobs:
             libmtdev-dev libwacom-dev \
             libegl-dev libgles-dev \
             hwdata checkinstall pkg-config \
-            wayland-protocols
+            wayland-protocols \
+            libcjson-dev
 
       - name: Build wayland
         if: steps.check.outputs.skip == 'false'
