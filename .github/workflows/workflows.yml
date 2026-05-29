@@ -32,7 +32,6 @@ jobs:
             echo "skip=false" >> $GITHUB_OUTPUT
             echo "New version detected, building."
           fi
-
       - name: Install base dependencies
         if: steps.check.outputs.skip == 'false'
         run: |
@@ -49,12 +48,12 @@ jobs:
             hwdata checkinstall pkg-config \
             wayland-protocols \
             libcjson-dev \
-            libxcb1-dev 
-            libxcb-ewmh-dev \ 
+            libxcb1-dev \
+            libxcb-ewmh-dev \
             libxcb-render-util0-dev \
             libxcb-xinput-dev \
-            libx11-dev 
-
+            libx11-dev
+            
       - name: Build wayland
         if: steps.check.outputs.skip == 'false'
         run: |
