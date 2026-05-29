@@ -45,7 +45,6 @@ jobs:
             libmtdev-dev libwacom-dev \
             libegl-dev libgles-dev \
             hwdata checkinstall pkg-config \
-            wayland-protocols \
             libcjson-dev \
             libxcb1-dev \
             libxcb-composite0-dev \
@@ -60,6 +59,8 @@ jobs:
             libx11-xcb-dev \
             libx11-dev \
             xwayland
+
+      
             
       - name: Build wayland
         if: steps.check.outputs.skip == 'false'
@@ -67,6 +68,15 @@ jobs:
           git clone -b 1.23.1 https://gitlab.freedesktop.org/wayland/wayland.git
           cd wayland
           meson build -Dprefix=/usr -Ddocumentation=false -Dtests=false
+          sudo ninja -C build install
+          sudo ldconfig
+          
+      - name: Build wayland-protocols
+        if: steps.check.outputs.skip == 'false'
+        run: |
+          git clone -b 1.39 https://gitlab.freedesktop.org/wayland/wayland-protocols.git
+          cd wayland-protocols
+          meson build -Dprefix=/usr -Dtests=false
           sudo ninja -C build install
           sudo ldconfig
 
