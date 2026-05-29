@@ -34,6 +34,7 @@ jobs:
             echo "skip=false" >> $GITHUB_OUTPUT
             echo "New version detected, building."
           fi
+
       - name: Install base dependencies
         if: steps.check.outputs.skip == 'false'
         run: |
@@ -62,8 +63,6 @@ jobs:
             libx11-dev \
             xwayland
 
-      
-            
       - name: Build wayland
         if: steps.check.outputs.skip == 'false'
         run: |
@@ -72,7 +71,7 @@ jobs:
           meson build -Dprefix=/usr -Ddocumentation=false -Dtests=false
           sudo ninja -C build install
           sudo ldconfig
-          
+
       - name: Build wayland-protocols
         if: steps.check.outputs.skip == 'false'
         run: |
@@ -181,3 +180,11 @@ jobs:
             Automatic build — MangoWM ${{ steps.mangowm_release.outputs.version }} for Devuan.
 
             **Install:**
+            ```bash
+            sudo dpkg -i mangowm-${{ steps.mangowm_release.outputs.version }}-devuan.deb
+            ```
+
+            **Not:** Bu paket Ubuntu üzerinde derlenmiş olup Devuan için tasarlanmıştır.
+          files: |
+            ${{ github.workspace }}/mangowm-${{ steps.mangowm_release.outputs.version }}-devuan.deb
+            ${{ github.workspace }}/mangowm.tar.gz
