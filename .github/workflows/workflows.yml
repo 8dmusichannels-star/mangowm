@@ -1,0 +1,125 @@
+name: Build MangoWM for Devuan
+
+on:
+  schedule:
+    - cron: '0 6 * * *'
+  workflow_dispatch:
+
+jobs:
+  check-and-build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Get latest mangowm release
+        id: mangowm_release
+        run: |
+          LATEST=$(curl -s https://api.github.com/repos/mangowm/mango/releases/latest | jq -r '.tag_name')
+          echo "version=$LATEST" >> $GITHUB_OUTPUT
+          echo "Latest mangowm: $LATEST"
+
+      - name: Check if already built
+        id: check
+        run: |
+          BUILT=$(curl -s \
+            -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
+            https://api.github.com/repos/${{ github.repository }}/releases/latest \
+            | jq -r '.tag_name' 2>/dev/null || echo "none")
+          echo "built=$BUILT" >> $GITHUB_OUTPUT
+          if [ "$BUILT" = "${{ steps.mangowm_release.outputs.version }}" ]; then
+            echo "skip=true" >> $GITHUB_OUTPUT
+            echo "Already built, skipping."
+          else
+            echo "skip=false" >> $GITHUB_OUTPUT
+            echo "New version detected, building."
+          fi
+
+      - name: Install dependencies
+        if: steps.check.outputs.skip == 'false'
+        run: |
+          sudo apt update
+          sudo apt install -y \
+            meson ninja-build git curl jq build-essential \
+            libwayland-dev wayland-protocols \
+            libinput-dev libdrm-dev \
+            libxkbcommon-dev libpixman-1-dev \
+            libseat-dev libpcre2-dev \
+            libxcb-composite0-dev xwayland \
+            hwdata checkinstall pkg-config
+
+      - name: Build libdisplay-info
+        if: steps.check.outputs.skip == 'false'
+        run: |
+          git clone https://gitlab.freedesktop.org/emersion/libdisplay-info.git
+          cd libdisplay-info
+          meson build -Dprefix=/usr
+          sudo ninja -C build install
+
+      - name: Build libliftoff
+        if: steps.check.outputs.skip == 'false'
+        run: |
+          git clone https://gitlab.freedesktop.org/emersion/libliftoff.git
+          cd libliftoff
+          meson build -Dprefix=/usr
+          sudo ninja -C build install
+
+      - name: Build wlroots
+        if: steps.check.outputs.skip == 'false'
+        run: |
+          git clone -b 0.19.2 https://gitlab.freedesktop.org/wlroots/wlroots.git
+          cd wlroots
+          meson build -Dprefix=/usr
+          sudo ninja -C build install
+
+      - name: Build scenefx
+        if: steps.check.outputs.skip == 'false'
+        run: |
+          git clone -b 0.4.1 https://github.com/wlrfx/scenefx.git
+          cd scenefx
+          meson build -Dprefix=/usr
+          sudo ninja -C build install
+
+      - name: Download mangowm source tarball
+        if: steps.check.outputs.skip == 'false'
+        run: |
+          VERSION=${{ steps.mangowm_release.outputs.version }}
+          curl -L \
+            https://github.com/mangowm/mango/archive/refs/tags/${VERSION}.tar.gz \
+            -o $GITHUB_WORKSPACE/mangowm.tar.gz
+          tar -xzf $GITHUB_WORKSPACE/mangowm.tar.gz -C $GITHUB_WORKSPACE
+          mv $GITHUB_WORKSPACE/mango-${VERSION#v} $GITHUB_WORKSPACE/mango || \
+          mv $GITHUB_WORKSPACE/mango-${VERSION} $GITHUB_WORKSPACE/mango
+
+      - name: Build mangowm
+        if: steps.check.outputs.skip == 'false'
+        run: |
+          cd $GITHUB_WORKSPACE/mango
+          meson build -Dprefix=/usr
+          sudo ninja -C build install
+
+      - name: Package .deb
+        if: steps.check.outputs.skip == 'false'
+        run: |
+          VERSION=${{ steps.mangowm_release.outputs.version }}
+          cd $GITHUB_WORKSPACE/mango
+          sudo checkinstall \
+            --pkgname=mangowm \
+            --pkgversion=${VERSION#v} \
+            --pkgrelease=devuan1 \
+            --pkglicense=MIT \
+            --maintainer="8dmusichannels-star" \
+            --nodoc \
+            --default \
+            ninja -C build install
+          find $GITHUB_WORKSPACE/mango -name "*.deb" \
+            -exec mv {} $GITHUB_WORKSPACE/mangowm-${VERSION}-devuan.deb \;
+
+      - name: Publish Release
+        if: steps.check.outputs.skip == 'false'
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: ${{ steps.mangowm_release.outputs.version }}
+          name: MangoWM ${{ steps.mangowm_release.outputs.version }} for Devuan
+          body: |
+            Otomatik build — MangoWM ${{ steps.mangowm_release.outputs.version }} Devuan için.
+
+            **Kurulum:**
