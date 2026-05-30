@@ -193,9 +193,12 @@ jobs:
           Priority: optional
           Architecture: amd64
           Maintainer: 8dmusichannels-star
+          Conflicts: libwayland-client0, libwayland-server0, libwayland-cursor0, libwayland-bin, libpixman-1-0
+          Replaces: libwayland-client0, libwayland-server0, libwayland-cursor0, libwayland-bin, libpixman-1-0
+          Provides: libwayland-client0, libwayland-server0, libwayland-cursor0, libwayland-bin, libpixman-1-0
           Description: MangoWM Wayland compositor with all dependencies
-           Includes mangowm, wlroots, scenefx, libinput, libliftoff,
-           libdisplay-info, pixman and wayland libraries.
+          Includes mangowm, wlroots, scenefx, libinput, libliftoff,
+          libdisplay-info, pixman and wayland libraries.
           EOF
 
           # ldconfig postinst scripti
