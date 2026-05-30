@@ -67,7 +67,7 @@ jobs:
       - name: Build wayland
         if: steps.check.outputs.skip == 'false'
         run: |
-          git clone -b 1.23.1 https://gitlab.freedesktop.org/wayland/wayland.git
+          git clone -b 1.24.0 https://gitlab.freedesktop.org/wayland/wayland.git
           cd wayland
           meson build -Dprefix=/usr -Ddocumentation=false -Dtests=false
           sudo ninja -C build install
@@ -182,7 +182,7 @@ jobs:
           sudo rm -rf $PKGDIR/usr/share/man
           sudo rm -rf $PKGDIR/usr/share/wayland-protocols
 
-          printf 'Package: mangowm-full\nVersion: %s-devuan1\nSection: x11\nPriority: optional\nArchitecture: amd64\nMaintainer: 8dmusichannels-star\nConflicts: libwayland-client0, libwayland-server0, libwayland-cursor0, libwayland-bin, libpixman-1-0\nReplaces: libwayland-client0, libwayland-server0, libwayland-cursor0, libwayland-bin, libpixman-1-0\nProvides: libwayland-client0 (= 1.23.1), libwayland-server0 (= 1.23.1), libwayland-cursor0 (= 1.23.1), libwayland-bin (= 1.23.1), libpixman-1-0 (= 0.43.4)\nDescription: MangoWM Wayland compositor with all dependencies\n Includes mangowm, wlroots, scenefx, libinput, libliftoff, libdisplay-info, pixman and wayland libraries.\n' "$PKGVER" > $PKGDIR/DEBIAN/control
+          printf 'Package: mangowm-full\nVersion: %s-devuan1\nSection: x11\nPriority: optional\nArchitecture: amd64\nMaintainer: 8dmusichannels-star\nConflicts: libwayland-client0, libwayland-server0, libwayland-cursor0, libwayland-bin, libpixman-1-0\nReplaces: libwayland-client0, libwayland-server0, libwayland-cursor0, libwayland-bin, libpixman-1-0\nProvides: libwayland-client0 (= 1.24.0), libwayland-server0 (= 1.24.0), libwayland-cursor0 (= 1.24.0), libwayland-bin (= 1.24.0), libpixman-1-0 (= 0.43.4)\nDescription: MangoWM Wayland compositor with all dependencies\n Includes mangowm, wlroots, scenefx, libinput, libliftoff, libdisplay-info, pixman and wayland libraries.\n' "$PKGVER" > $PKGDIR/DEBIAN/control
           
           printf '#!/bin/sh\nldconfig\n' > $PKGDIR/DEBIAN/postinst
           chmod 755 $PKGDIR/DEBIAN/postinst
