@@ -161,13 +161,11 @@ jobs:
           PKGVER=${VERSION#v}
           PKGDIR=$GITHUB_WORKSPACE/mangowm-pkg
 
-          # Klasör yapısını oluştur
           mkdir -p $PKGDIR/DEBIAN
           mkdir -p $PKGDIR/usr/bin
           mkdir -p $PKGDIR/usr/lib
           mkdir -p $PKGDIR/usr/share
 
-          # Her bileşeni DESTDIR ile PKGDIR'e kur
           sudo DESTDIR=$PKGDIR ninja -C $GITHUB_WORKSPACE/mango/build install
           sudo DESTDIR=$PKGDIR ninja -C $GITHUB_WORKSPACE/wlroots/build install
           sudo DESTDIR=$PKGDIR ninja -C $GITHUB_WORKSPACE/scenefx/build install
@@ -177,7 +175,6 @@ jobs:
           sudo DESTDIR=$PKGDIR ninja -C $GITHUB_WORKSPACE/pixman/build install
           sudo DESTDIR=$PKGDIR ninja -C $GITHUB_WORKSPACE/wayland/build install
 
-          # Gereksiz geliştirici dosyalarını temizle
           sudo rm -rf $PKGDIR/usr/include
           sudo rm -rf $PKGDIR/usr/lib/pkgconfig
           sudo rm -rf $PKGDIR/usr/share/pkgconfig
@@ -185,32 +182,13 @@ jobs:
           sudo rm -rf $PKGDIR/usr/share/man
           sudo rm -rf $PKGDIR/usr/share/wayland-protocols
 
-          # control dosyası oluştur
-          cat > $PKGDIR/DEBIAN/control << EOF
-          Package: mangowm-full
-          Version: ${PKGVER}-devuan1
-          Section: x11
-          Priority: optional
-          Architecture: amd64
-          Maintainer: 8dmusichannels-star
-          Conflicts: libwayland-client0, libwayland-server0, libwayland-cursor0, libwayland-bin, libpixman-1-0
-          Replaces: libwayland-client0, libwayland-server0, libwayland-cursor0, libwayland-bin, libpixman-1-0
-          Provides: libwayland-client0, libwayland-server0, libwayland-cursor0, libwayland-bin, libpixman-1-0
-          Description: MangoWM Wayland compositor with all dependencies
-          Includes mangowm, wlroots, scenefx, libinput, libliftoff,
-          libdisplay-info, pixman and wayland libraries.
-          EOF
+          printf 'Package: mangowm-full\nVersion: %s-devuan1\nSection: x11\nPriority: optional\nArchitecture: amd64\nMaintainer: 8dmusichannels-star\nConflicts: libwayland-client0, libwayland-server0, libwayland-cursor0, libwayland-bin, libpixman-1-0\nReplaces: libwayland-client0, libwayland-server0, libwayland-cursor0, libwayland-bin, libpixman-1-0\nProvides: libwayland-client0, libwayland-server0, libwayland-cursor0, libwayland-bin, libpixman-1-0\nDescription: MangoWM Wayland compositor with all dependencies\n Includes mangowm, wlroots, scenefx, libinput, libliftoff, libdisplay-info, pixman and wayland libraries.\n' "$PKGVER" > $PKGDIR/DEBIAN/control
 
-          # ldconfig postinst scripti
-          cat > $PKGDIR/DEBIAN/postinst << 'EOF'
-          #!/bin/sh
-          ldconfig
-          EOF
+          printf '#!/bin/sh\nldconfig\n' > $PKGDIR/DEBIAN/postinst
           chmod 755 $PKGDIR/DEBIAN/postinst
 
-          # .deb oluştur
           dpkg-deb --build $PKGDIR $GITHUB_WORKSPACE/mangowm-full-${VERSION}-devuan.deb
-
+          
       - name: Publish Release
         if: steps.check.outputs.skip == 'false'
         uses: softprops/action-gh-release@v1
