@@ -67,7 +67,7 @@ jobs:
       - name: Build wayland
         if: steps.check.outputs.skip == 'false'
         run: |
-          git clone -b 1.24.0 https://gitlab.freedesktop.org/wayland/wayland.git
+          git clone -b 1.25.0 https://gitlab.freedesktop.org/wayland/wayland.git
           cd wayland
           meson build -Dprefix=/usr -Ddocumentation=false -Dtests=false
           sudo ninja -C build install
@@ -76,7 +76,7 @@ jobs:
       - name: Build wayland-protocols
         if: steps.check.outputs.skip == 'false'
         run: |
-          git clone -b 1.41 https://gitlab.freedesktop.org/wayland/wayland-protocols.git
+          git clone -b 1.48 https://gitlab.freedesktop.org/wayland/wayland-protocols.git
           cd wayland-protocols
           meson build -Dprefix=/usr -Dtests=false
           sudo ninja -C build install
@@ -85,7 +85,7 @@ jobs:
       - name: Build pixman
         if: steps.check.outputs.skip == 'false'
         run: |
-          git clone -b pixman-0.43.4 https://gitlab.freedesktop.org/pixman/pixman.git
+          git clone -b pixman-0.46.4 https://gitlab.freedesktop.org/pixman/pixman.git
           cd pixman
           meson build -Dprefix=/usr -Dgtk=disabled -Dtests=disabled -Ddemos=disabled
           sudo ninja -C build install
@@ -94,7 +94,7 @@ jobs:
       - name: Build libinput
         if: steps.check.outputs.skip == 'false'
         run: |
-          git clone -b 1.27.1 https://gitlab.freedesktop.org/libinput/libinput.git
+          git clone -b 1.31.3 https://gitlab.freedesktop.org/libinput/libinput.git
           cd libinput
           meson build -Dprefix=/usr -Ddocumentation=false -Dtests=false -Dlibwacom=false -Ddebug-gui=false
           sudo ninja -C build install
