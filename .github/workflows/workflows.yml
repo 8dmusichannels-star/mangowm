@@ -12,13 +12,19 @@ jobs:
       contents: write
 
     steps:
+      -  name: depends is building
+         id: depender
+         run: |
+          sudo apt install gzip
+         
+      
       - name: Get latest mangowm release
         id: mangowm_release
         run: |
           LATEST=$(curl -s https://api.github.com/repos/mangowm/mango/releases/latest | jq -r '.tag_name')
           echo "version=$LATEST" >> $GITHUB_OUTPUT
           echo "Latest mangowm: $LATEST"
-
+  
       - name: Check if already built
         id: check
         run: |
