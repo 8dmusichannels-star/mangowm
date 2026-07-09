@@ -54,7 +54,7 @@ jobs:
             python3-pip \
             libffi-dev libexpat1-dev libxml2-dev \
             libxkbcommon-dev \
-            libseat-dev libpcre2-dev \
+            libseat-dev libpcre2-dev libpango1.0-dev \
             libgbm-dev libudev-dev libevdev-dev \
             libmtdev-dev libwacom-dev \
             libegl-dev libgles-dev \
@@ -80,7 +80,8 @@ jobs:
             libinput-dev \
             libdisplay-info-dev \
             liblcms2-dev \
-            libvulkan-dev glslang-tools
+            libvulkan-dev glslang-tools 
+            
 
       - name: Ensure recent meson
         if: steps.check.outputs.skip == 'false'
