@@ -50,7 +50,7 @@ jobs:
         run: |
           apt-get update
           apt-get install -y \
-            meson ninja-build build-essential \
+            meson ninja-build build-essential cmake \
             python3-pip \
             libffi-dev libexpat1-dev libxml2-dev \
             libxkbcommon-dev \
@@ -73,7 +73,14 @@ jobs:
             libx11-xcb-dev \
             libx11-dev \
             xwayland \
-            dpkg-dev
+            dpkg-dev \
+            libwayland-dev libwayland-bin wayland-protocols \
+            libpixman-1-dev \
+            libdrm-dev \
+            libinput-dev \
+            libdisplay-info-dev \
+            liblcms2-dev \
+            libvulkan-dev glslang-tools
 
       - name: Ensure recent meson
         if: steps.check.outputs.skip == 'false'
@@ -147,7 +154,6 @@ jobs:
 
           dpkg-deb --build $PKGDIR $GITHUB_WORKSPACE/mangowm-full-${VERSION}-devuan.deb
 
-     
       - name: Publish Release
         if: steps.check.outputs.skip == 'false'
         uses: softprops/action-gh-release@v1
@@ -155,16 +161,14 @@ jobs:
           tag_name: ${{ steps.mangowm_release.outputs.version }}
           name: MangoWM ${{ steps.mangowm_release.outputs.version }} for Devuan
           body: |
-            Automatic build — MangoWM ${{ steps.mangowm_release.outputs.version }}, Devuan (ceres) building.
+            Automatic build — MangoWM ${{ steps.mangowm_release.outputs.version }}, gerçek Devuan (ceres) container'ında derlendi.
 
-            All depends (wlroots, scenefx, libinput, libxkbcommon vb.)
+            wlroots ve scenefx kaynaktan derlendi, diğer bağımlılıklar sistem paketlerinden kullanıldı.
 
             **Install:**
             ```bash
             wget https://github.com/${{ github.repository }}/releases/download/${{ steps.mangowm_release.outputs.version }}/mangowm-full-${{ steps.mangowm_release.outputs.version }}-devuan.deb
-            sudo apt install libwayland-bin libwayland-client0 libwayland-server0 libwayland-cursor0 libpixman-1-0 libxkbcommon0
             sudo dpkg -i mangowm-full-${{ steps.mangowm_release.outputs.version }}-devuan.deb
             ```
           files: |
             ${{ github.workspace }}/mangowm-full-${{ steps.mangowm_release.outputs.version }}-devuan.deb
-            
