@@ -48,7 +48,7 @@ jobs:
           sudo apt install -y \
             meson ninja-build git curl jq build-essential \
             libffi-dev libexpat1-dev libxml2-dev \
-            libdrm-dev libxkbcommon-dev \
+            libxkbcommon-dev \
             libseat-dev libpcre2-dev \
             libgbm-dev libudev-dev libevdev-dev \
             libmtdev-dev libwacom-dev \
@@ -123,6 +123,14 @@ jobs:
           meson build -Dprefix=/usr
           sudo ninja -C build install
           sudo ldconfig
+      - name: Build libdrm
+        if: steps.check.outputs.skip == 'false'
+        run: |
+          git clone -b libdrm-2.4.129 https://gitlab.freedesktop.org/mesa/drm.git
+          cd drm
+          meson setup build
+          meson compile -C build
+          sudo meson install -C build
 
       - name: Build wlroots
         if: steps.check.outputs.skip == 'false'
