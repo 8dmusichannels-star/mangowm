@@ -78,7 +78,16 @@ jobs:
           meson build -Dprefix=/usr -Ddocumentation=false -Dtests=false
           sudo ninja -C build install
           sudo ldconfig
-
+          
+      - name: Build libdrm
+        if: steps.check.outputs.skip == 'false'
+        run: |
+          git clone -b libdrm-2.4.129 https://gitlab.freedesktop.org/mesa/drm.git
+          cd drm
+          meson setup build
+          meson compile -C build
+          sudo meson install -C build
+          
       - name: Build wayland-protocols
         if: steps.check.outputs.skip == 'false'
         run: |
@@ -123,14 +132,7 @@ jobs:
           meson build -Dprefix=/usr
           sudo ninja -C build install
           sudo ldconfig
-      - name: Build libdrm
-        if: steps.check.outputs.skip == 'false'
-        run: |
-          git clone -b libdrm-2.4.129 https://gitlab.freedesktop.org/mesa/drm.git
-          cd drm
-          meson setup build
-          meson compile -C build
-          sudo meson install -C build
+    
 
       - name: Build wlroots
         if: steps.check.outputs.skip == 'false'
