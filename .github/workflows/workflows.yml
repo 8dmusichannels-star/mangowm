@@ -100,7 +100,7 @@ jobs:
       - name: Build scenefx
         if: steps.check.outputs.skip == 'false'
         run: |
-          git clone -b 0.5.0 https://github.com/wlrfx/scenefx.git
+          git clone -b 0.5 https://github.com/wlrfx/scenefx.git
           cd scenefx
           meson setup build -Dprefix=/usr
           ninja -C build install
