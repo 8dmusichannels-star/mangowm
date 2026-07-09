@@ -8,23 +8,27 @@ on:
 jobs:
   check-and-build:
     runs-on: ubuntu-latest
+    container:
+      image: devuan/devuan:ceres
     permissions:
       contents: write
 
     steps:
-      -  name: depends is building
-         id: depender
-         run: |
-          sudo apt install gzip
-         
-      
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Base tools
+        run: |
+          apt-get update
+          apt-get install -y curl jq git ca-certificates
+
       - name: Get latest mangowm release
         id: mangowm_release
         run: |
           LATEST=$(curl -s https://api.github.com/repos/mangowm/mango/releases/latest | jq -r '.tag_name')
           echo "version=$LATEST" >> $GITHUB_OUTPUT
           echo "Latest mangowm: $LATEST"
-  
+
       - name: Check if already built
         id: check
         run: |
@@ -44,10 +48,12 @@ jobs:
       - name: Install base dependencies
         if: steps.check.outputs.skip == 'false'
         run: |
-          sudo apt update
-          sudo apt install -y \
-            meson ninja-build git curl jq build-essential \
+          apt-get update
+          apt-get install -y \
+            meson ninja-build build-essential \
+            python3-pip \
             libffi-dev libexpat1-dev libxml2-dev \
+            libxkbcommon-dev \
             libseat-dev libpcre2-dev \
             libgbm-dev libudev-dev libevdev-dev \
             libmtdev-dev libwacom-dev \
@@ -69,95 +75,29 @@ jobs:
             xwayland \
             dpkg-dev
 
-      - name: Build wayland
+      - name: Ensure recent meson
         if: steps.check.outputs.skip == 'false'
         run: |
-          git clone -b 1.25.0 https://gitlab.freedesktop.org/wayland/wayland.git
-          cd wayland
-          meson build -Dprefix=/usr -Ddocumentation=false -Dtests=false
-          sudo ninja -C build install
-          sudo ldconfig
-      - name: Build libxkbcommon
-        if: steps.check.outputs.skip == 'false'
-        run: |
-         git clone -b xkbcommon-1.13.2 https://github.com/xkbcommon/libxkbcommon.git
-         cd libxkbcommon
-         meson build -Dprefix=/usr -Denable-wayland=true -Denable-docs=false -Denable-tools=true
-         sudo ninja -C build install
-         sudo ldconfig
-
-      - name: Build libdrm
-        if: steps.check.outputs.skip == 'false'
-        run: |
-          git clone -b libdrm-2.4.129 https://gitlab.freedesktop.org/mesa/drm.git
-          cd drm
-          meson setup build
-          meson compile -C build
-          sudo meson install -C build
-          
-      - name: Build wayland-protocols
-        if: steps.check.outputs.skip == 'false'
-        run: |
-          git clone -b 1.48 https://gitlab.freedesktop.org/wayland/wayland-protocols.git
-          cd wayland-protocols
-          meson build -Dprefix=/usr -Dtests=false
-          sudo ninja -C build install
-          sudo ldconfig
-
-      - name: Build pixman
-        if: steps.check.outputs.skip == 'false'
-        run: |
-          git clone -b pixman-0.46.4 https://gitlab.freedesktop.org/pixman/pixman.git
-          cd pixman
-          meson build -Dprefix=/usr -Dgtk=disabled -Dtests=disabled -Ddemos=disabled
-          sudo ninja -C build install
-          sudo ldconfig
-
-      - name: Build libinput
-        if: steps.check.outputs.skip == 'false'
-        run: |
-          git clone -b 1.31.3 https://gitlab.freedesktop.org/libinput/libinput.git
-          cd libinput
-          meson build -Dprefix=/usr -Ddocumentation=false -Dtests=false -Dlibwacom=false -Ddebug-gui=false
-          sudo ninja -C build install
-          sudo ldconfig
-
-      - name: Build libdisplay-info
-        if: steps.check.outputs.skip == 'false'
-        run: |
-          git clone https://gitlab.freedesktop.org/emersion/libdisplay-info.git
-          cd libdisplay-info
-          meson build -Dprefix=/usr
-          sudo ninja -C build install
-          sudo ldconfig
-
-      - name: Build libliftoff
-        if: steps.check.outputs.skip == 'false'
-        run: |
-          git clone https://gitlab.freedesktop.org/emersion/libliftoff.git
-          cd libliftoff
-          meson build -Dprefix=/usr
-          sudo ninja -C build install
-          sudo ldconfig
-    
+          pip install --break-system-packages --upgrade meson
+          meson --version
 
       - name: Build wlroots
         if: steps.check.outputs.skip == 'false'
         run: |
           git clone -b 0.20 https://gitlab.freedesktop.org/wlroots/wlroots.git
           cd wlroots
-          meson build -Dprefix=/usr -Dxwayland=enabled
-          sudo ninja -C build install
-          sudo ldconfig
+          meson setup build -Dprefix=/usr -Dxwayland=enabled
+          ninja -C build install
+          ldconfig
 
       - name: Build scenefx
         if: steps.check.outputs.skip == 'false'
         run: |
           git clone -b 0.4.1 https://github.com/wlrfx/scenefx.git
           cd scenefx
-          meson build -Dprefix=/usr
-          sudo ninja -C build install
-          sudo ldconfig
+          meson setup build -Dprefix=/usr
+          ninja -C build install
+          ldconfig
 
       - name: Download mangowm source tarball
         if: steps.check.outputs.skip == 'false'
@@ -174,8 +114,8 @@ jobs:
         if: steps.check.outputs.skip == 'false'
         run: |
           cd $GITHUB_WORKSPACE/mango
-          meson build -Dprefix=/usr
-          sudo ninja -C build install
+          meson setup build -Dprefix=/usr
+          ninja -C build install
 
       - name: Package everything into one .deb
         if: steps.check.outputs.skip == 'false'
@@ -189,45 +129,42 @@ jobs:
           mkdir -p $PKGDIR/usr/lib
           mkdir -p $PKGDIR/usr/share
 
-          sudo DESTDIR=$PKGDIR ninja -C $GITHUB_WORKSPACE/mango/build install
-          sudo DESTDIR=$PKGDIR ninja -C $GITHUB_WORKSPACE/wlroots/build install
-          sudo DESTDIR=$PKGDIR ninja -C $GITHUB_WORKSPACE/scenefx/build install
-          sudo DESTDIR=$PKGDIR ninja -C $GITHUB_WORKSPACE/libinput/build install
-          sudo DESTDIR=$PKGDIR ninja -C $GITHUB_WORKSPACE/libliftoff/build install
-          sudo DESTDIR=$PKGDIR ninja -C $GITHUB_WORKSPACE/libdisplay-info/build install
-          sudo DESTDIR=$PKGDIR ninja -C $GITHUB_WORKSPACE/pixman/build install
-          sudo DESTDIR=$PKGDIR ninja -C $GITHUB_WORKSPACE/wayland/build install
+          DESTDIR=$PKGDIR ninja -C $GITHUB_WORKSPACE/mango/build install
+          DESTDIR=$PKGDIR ninja -C $GITHUB_WORKSPACE/wlroots/build install
+          DESTDIR=$PKGDIR ninja -C $GITHUB_WORKSPACE/scenefx/build install
 
-          sudo rm -rf $PKGDIR/usr/include
-          sudo rm -rf $PKGDIR/usr/lib/pkgconfig
-          sudo rm -rf $PKGDIR/usr/share/pkgconfig
-          sudo rm -rf $PKGDIR/usr/share/doc
-          sudo rm -rf $PKGDIR/usr/share/man
-          sudo rm -rf $PKGDIR/usr/share/wayland-protocols
+          rm -rf $PKGDIR/usr/include
+          rm -rf $PKGDIR/usr/lib/pkgconfig
+          rm -rf $PKGDIR/usr/share/pkgconfig
+          rm -rf $PKGDIR/usr/share/doc
+          rm -rf $PKGDIR/usr/share/man
+          rm -rf $PKGDIR/usr/share/wayland-protocols
 
-          printf 'Package: mangowm-full\nVersion: %s-devuan1\nSection: x11\nPriority: optional\nArchitecture: amd64\nMaintainer: 8dmusichannels-star\nConflicts: libwayland-client0, libwayland-server0, libwayland-cursor0, libwayland-bin, libpixman-1-0\nReplaces: libwayland-client0, libwayland-server0, libwayland-cursor0, libwayland-bin, libpixman-1-0\nProvides: libwayland-client0 (= 1.24.0), libwayland-server0 (= 1.24.0), libwayland-cursor0 (= 1.24.0), libwayland-bin (= 1.24.0), libpixman-1-0 (= 0.43.4)\nDescription: MangoWM Wayland compositor with all dependencies\n Includes mangowm, wlroots, scenefx, libinput, libliftoff, libdisplay-info, pixman and wayland libraries.\n' "$PKGVER" > $PKGDIR/DEBIAN/control
-          
+          printf 'Package: mangowm-full\nVersion: %s-devuan1\nSection: x11\nPriority: optional\nArchitecture: amd64\nMaintainer: 8dmusichannels-star\nDescription: MangoWM Wayland compositor with wlroots and scenefx\n Includes mangowm, wlroots and scenefx built from source.\n' "$PKGVER" > $PKGDIR/DEBIAN/control
+
           printf '#!/bin/sh\nldconfig\n' > $PKGDIR/DEBIAN/postinst
           chmod 755 $PKGDIR/DEBIAN/postinst
 
           dpkg-deb --build $PKGDIR $GITHUB_WORKSPACE/mangowm-full-${VERSION}-devuan.deb
-          
+
+     
       - name: Publish Release
         if: steps.check.outputs.skip == 'false'
         uses: softprops/action-gh-release@v1
         with:
           tag_name: ${{ steps.mangowm_release.outputs.version }}
-          name: MangoWM ${{ steps.mangowm_release.outputs.version }} for Deb
+          name: MangoWM ${{ steps.mangowm_release.outputs.version }} for Devuan
           body: |
-            Automatic build — MangoWM ${{ steps.mangowm_release.outputs.version }} for Deb.
+            Automatic build — MangoWM ${{ steps.mangowm_release.outputs.version }}, Devuan (ceres) building.
 
-            All depends (wlroots, scenefx, libinput, vb.) one package.
+            All depends (wlroots, scenefx, libinput, libxkbcommon vb.)
 
             **Install:**
             ```bash
             wget https://github.com/${{ github.repository }}/releases/download/${{ steps.mangowm_release.outputs.version }}/mangowm-full-${{ steps.mangowm_release.outputs.version }}-devuan.deb
-            sudo apt remove libwayland-bin libwayland-client0 libwayland-server0 libwayland-cursor0 libpixman-1-0
-            sudo dpkg -i mangowm-full-${{ steps.mangowm_release.outputs.version }}.deb
+            sudo apt install libwayland-bin libwayland-client0 libwayland-server0 libwayland-cursor0 libpixman-1-0 libxkbcommon0
+            sudo dpkg -i mangowm-full-${{ steps.mangowm_release.outputs.version }}-devuan.deb
             ```
           files: |
             ${{ github.workspace }}/mangowm-full-${{ steps.mangowm_release.outputs.version }}-devuan.deb
+            
