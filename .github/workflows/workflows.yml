@@ -20,7 +20,7 @@ jobs:
       - name: Base tools
         run: |
           apt-get update
-          apt-get install -y curl jq git ca-certificates
+          apt-get install -y curl jq git ca-certificates libxcb-randr0-dev
 
       - name: Get latest mangowm release
         id: mangowm_release
